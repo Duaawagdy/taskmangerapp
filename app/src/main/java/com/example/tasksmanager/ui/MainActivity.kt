@@ -2,27 +2,24 @@ package com.example.tasksmanager.ui
 
 import android.os.Bundle
 import android.view.View
-import androidx.activity.enableEdgeToEdge
+import androidx.activity.viewModels
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.view.ViewCompat
-import androidx.core.view.WindowInsetsCompat
-import androidx.lifecycle.ViewModelProvider
+
 import androidx.recyclerview.widget.LinearLayoutManager
 
 import com.example.tasksmanager.R
 import com.example.tasksmanager.data.Task
-import com.example.tasksmanager.data.TaskDatabase
 import com.example.tasksmanager.databinding.ActivityMainBinding
 import com.example.tasksmanager.databinding.DialogTaskBinding
-import com.example.tasksmanager.repository.TaskRepository
 import com.example.tasksmanager.ui.adaptor.TaskAdapter
 import com.example.tasksmanager.viewmodel.TaskViewModel
-import com.example.tasksmanager.viewmodel.TaskViewModelFactory
+import dagger.hilt.android.AndroidEntryPoint
 
+@AndroidEntryPoint
 class MainActivity : AppCompatActivity() {
 
-    private lateinit var viewModel: TaskViewModel
+    private val viewModel: TaskViewModel by viewModels()
     private lateinit var adapter: TaskAdapter
     private lateinit var binding: ActivityMainBinding
 
@@ -31,19 +28,14 @@ class MainActivity : AppCompatActivity() {
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        setupViewModel()
+       // setupViewModel()
         setupRecyclerView()
         setupClickListeners()
         observeTasks()
     }
 
-    private fun setupViewModel(){
-        val database = TaskDatabase.getDatabase(this)
-        val repository = TaskRepository(database.taskDao())
 
-        val viewModelFactory = TaskViewModelFactory(repository)
-        viewModel = ViewModelProvider(this,viewModelFactory)[TaskViewModel::class.java]
-    }
+
 
     private fun setupRecyclerView(){
         adapter = TaskAdapter(
@@ -72,17 +64,19 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun observeTasks(){
-        viewModel.allTasks.observe(this){tasks ->
+        viewModel.allTasks.observe(this) { tasks ->
             adapter.updateTasks(tasks)
-            if(tasks.isEmpty()){
+
+            if (tasks.isEmpty()) {
                 binding.rvTasks.visibility = View.GONE
-                binding.rvTasks.visibility = View.VISIBLE
-            }else{
+                binding.emptyState.visibility = View.VISIBLE
+            } else {
                 binding.rvTasks.visibility = View.VISIBLE
                 binding.emptyState.visibility = View.GONE
             }
         }
     }
+
 
     private fun setupClickListeners(){
         binding.btnAddTask.setOnClickListener{
